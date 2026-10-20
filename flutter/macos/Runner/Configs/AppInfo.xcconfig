@@ -5,10 +5,13 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = RustDesk
+PRODUCT_NAME = RDClient
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.carriez.flutterHbb
+PRODUCT_BUNDLE_IDENTIFIER = com.spidercloude.rdclient
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 Purslane Tech Pte. Ltd. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 ZavierCloud. Portions copyright Purslane Tech Pte. Ltd. (RustDesk, AGPL-3.0).
+
+// CocoaPods：Runner target 以本文件为 base configuration，需显式 include Pods 的设置
+#include "../../Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"

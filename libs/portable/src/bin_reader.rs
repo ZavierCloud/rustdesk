@@ -16,8 +16,8 @@ const PACKAGE_RESOURCE_NAME: &str = "RDPKG";
 
 // 4bytes
 const LENGTH: usize = 4;
-const IDENTIFIER: &[u8] = b"rustdesk";
-const IDENTIFIER_LENGTH: usize = 8;
+const IDENTIFIER: &[u8] = b"rd_client";
+const IDENTIFIER_LENGTH: usize = 9;
 const MD5_LENGTH: usize = 32;
 const BUF_SIZE: usize = 4096;
 
@@ -282,11 +282,11 @@ mod tests {
     #[test]
     fn parses_the_generate_py_layout() {
         let (files, exe) = parse(blob(
-            &[("./rustdesk.exe", b"app"), ("./custom.txt", b"cfg")],
-            "./rustdesk.exe",
+            &[("./rd_client.exe", b"app"), ("./custom.txt", b"cfg")],
+            "./rd_client.exe",
         ))
         .unwrap();
-        assert_eq!(exe, "./rustdesk.exe");
+        assert_eq!(exe, "./rd_client.exe");
         assert_eq!(files.len(), 2);
         assert_eq!(entry(&files, "./custom.txt").unwrap().raw, b"cfg");
     }
@@ -308,18 +308,18 @@ mod tests {
 
     #[test]
     fn without_a_package_the_stock_payload_is_untouched() {
-        let embedded = parse(blob(&[("./rustdesk.exe", b"app")], "./rustdesk.exe")).unwrap();
+        let embedded = parse(blob(&[("./rd_client.exe", b"app")], "./rd_client.exe")).unwrap();
         let (files, exe) = merge(embedded, Default::default());
-        assert_eq!(exe, "./rustdesk.exe");
-        assert!(entry(&files, "./rustdesk.exe").is_some());
+        assert_eq!(exe, "./rd_client.exe");
+        assert!(entry(&files, "./rd_client.exe").is_some());
     }
 
     #[test]
     fn renames_the_stock_executable_to_the_package_name() {
         // x86: the big executable stays in the generic payload and only gets renamed.
         let embedded = parse(blob(
-            &[("./rustdesk.exe", b"app"), ("./sciter.dll", b"dll")],
-            "./rustdesk.exe",
+            &[("./rd_client.exe", b"app"), ("./sciter.dll", b"dll")],
+            "./rd_client.exe",
         ))
         .unwrap();
         let package = parse(blob(&[("./custom.txt", b"cfg")], "./acme.exe")).unwrap();
@@ -328,7 +328,7 @@ mod tests {
 
         assert_eq!(exe, "./acme.exe");
         assert!(entry(&files, "./acme.exe").is_some());
-        assert!(entry(&files, "./rustdesk.exe").is_none());
+        assert!(entry(&files, "./rd_client.exe").is_none());
         // Untouched neighbours survive.
         assert_eq!(entry(&files, "./sciter.dll").unwrap().raw, b"dll");
         assert_eq!(entry(&files, "./custom.txt").unwrap().raw, b"cfg");
@@ -342,7 +342,7 @@ mod tests {
                 ("./data/flutter_assets/assets/icon.ico", b"stock-icon"),
                 ("./librustdesk.dll", b"core"),
             ],
-            "./rustdesk.exe",
+            "./rd_client.exe",
         ))
         .unwrap();
         let package = parse(blob(
@@ -385,7 +385,7 @@ mod tests {
         assert_eq!(paths, vec!["./custom.txt", "./data/logo.png"]);
 
         // Merging must not disturb them: the generic payload contributes none.
-        let embedded = parse(blob(&[("./librustdesk.dll", b"core")], "./rustdesk.exe")).unwrap();
+        let embedded = parse(blob(&[("./librustdesk.dll", b"core")], "./rd_client.exe")).unwrap();
         let (files, _) = merge(embedded, package);
         assert!(entry(&files, "./data/logo.png").is_some());
     }

@@ -100,11 +100,11 @@ fn load_plugin_in_app_path(dll_name: &str) -> Result<Library, LibError> {
     }
 }
 
-/// FFI for rustdesk core's main entry.
+/// FFI for rd_client core's main entry.
 /// Return true if the app should continue running with UI(possibly Flutter), false if the app should exit.
 #[cfg(not(windows))]
 #[no_mangle]
-pub extern "C" fn rustdesk_core_main() -> bool {
+pub extern "C" fn rd_client_core_main() -> bool {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     if crate::core_main::core_main().is_some() {
         return true;
@@ -124,7 +124,7 @@ pub extern "C" fn handle_applicationShouldOpenUntitledFile() {
 
 #[cfg(windows)]
 #[no_mangle]
-pub extern "C" fn rustdesk_core_main_args(args_len: *mut c_int) -> *mut *mut c_char {
+pub extern "C" fn rd_client_core_main_args(args_len: *mut c_int) -> *mut *mut c_char {
     unsafe { std::ptr::write(args_len, 0) };
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
@@ -139,7 +139,7 @@ pub extern "C" fn rustdesk_core_main_args(args_len: *mut c_int) -> *mut *mut c_c
 
 #[cfg(windows)]
 #[no_mangle]
-pub extern "C" fn rustdesk_is_disable_installation() -> c_int {
+pub extern "C" fn rd_client_is_disable_installation() -> c_int {
     hbb_common::config::is_disable_installation() as c_int
 }
 
@@ -195,7 +195,7 @@ pub unsafe extern "C" fn free_c_args(ptr: *mut *mut c_char, len: c_int) {
 
 #[cfg(windows)]
 #[no_mangle]
-pub unsafe extern "C" fn get_rustdesk_app_name(buffer: *mut u16, length: i32) -> i32 {
+pub unsafe extern "C" fn get_rd_client_app_name(buffer: *mut u16, length: i32) -> i32 {
     let name = crate::platform::wide_string(&crate::get_app_name());
     if length > name.len() as i32 {
         std::ptr::copy_nonoverlapping(name.as_ptr(), buffer, name.len());

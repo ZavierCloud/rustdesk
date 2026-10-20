@@ -60,7 +60,7 @@ fn prepare_install_commands(commands: &str) -> ResultType<String> {
          {}\r\n\
          if exist \"%~f0.dir\" exit /b {BATCH_OUTPUT_DIRECTORY_EXISTS_EXIT_CODE}\r\n\
          md \"%~f0.dir\" || exit /b {BATCH_OUTPUT_DIRECTORY_CREATE_FAILURE_EXIT_CODE}\r\n\
-         set \"RUSTDESK_OUTPUT_DIR=%~f0.dir\"\r\n{commands}\r\nexit /b 0\r\n",
+         set \"RD_CLIENT_OUTPUT_DIR=%~f0.dir\"\r\n{commands}\r\nexit /b 0\r\n",
         trusted_install_environment()?
     ))
 }
@@ -71,7 +71,7 @@ fn write_install_script(cmds: String) -> ResultType<InstallCommandScript> {
     let commands = prepare_install_commands(&cmds)?;
     let expected_hash = Sha256::digest(commands.as_bytes()).into();
     let path = directory.join(format!(
-        "rustdesk_install_{}.bat",
+        "rd_client_install_{}.bat",
         uuid::Uuid::new_v4().simple()
     ));
     let mut file = fs::OpenOptions::new()
@@ -100,7 +100,7 @@ fn verified_install_bootstrap(
 ) -> ResultType<String> {
     let source = path_for_cmd_assignment(&script.path)?;
     let runner = runner_directory.join(format!(
-        "rustdesk_install_{}.bat",
+        "rd_client_install_{}.bat",
         uuid::Uuid::new_v4().simple()
     ));
     let runner = path_for_cmd_assignment(&runner)?;
@@ -184,23 +184,23 @@ mod tests {
     #[test]
     fn native_install_handoff_verifies_before_execution() {
         let marker = std::env::temp_dir().join(format!(
-            "rustdesk_install_marker_{}",
+            "rd_client_install_marker_{}",
             uuid::Uuid::new_v4().simple()
         ));
         let runner_dir = std::env::temp_dir().join(format!(
-            "rustdesk_install_!RUSTDESK_HANDOFF_EXPAND!&^@()runner_{}",
+            "rd_client_install_!RD_CLIENT_HANDOFF_EXPAND!&^@()runner_{}",
             uuid::Uuid::new_v4().simple()
         ));
         std::fs::create_dir(&runner_dir).expect("runner directory should be created");
         let shortcut_commands = embedded_shortcut_commands(
-            shortcut_bytes(r"C:\RustDesk.exe", None, None)
+            shortcut_bytes(r"C:\RdClient.exe", None, None)
                 .expect("native shortcut should be generated"),
             "test.lnk",
             "test",
         );
         let script = write_install_script(format!(
-            "if \"%PROGRAMDATA%\"==\"rustdesk_untrusted\" exit /b 77\r\n\
-             if \"%PUBLIC%\"==\"rustdesk_untrusted\" exit /b 77\r\n\
+            "if \"%PROGRAMDATA%\"==\"rd_client_untrusted\" exit /b 77\r\n\
+             if \"%PUBLIC%\"==\"rd_client_untrusted\" exit /b 77\r\n\
              {shortcut_commands}\r\n\
              > \"{}\" echo verified",
             marker.display()
@@ -276,9 +276,9 @@ mod tests {
         let cmd = get_system_executable(CMD_RELATIVE_PATH).expect("system cmd.exe should resolve");
         let mut command = std::process::Command::new(cmd);
         command
-            .env("PROGRAMDATA", "rustdesk_untrusted")
-            .env("PUBLIC", "rustdesk_untrusted")
-            .env("RUSTDESK_HANDOFF_EXPAND", "expanded");
+            .env("PROGRAMDATA", "rd_client_untrusted")
+            .env("PUBLIC", "rd_client_untrusted")
+            .env("RD_CLIENT_HANDOFF_EXPAND", "expanded");
         command.raw_arg(format!("/D /E:ON /V:ON /C {bootstrap}"));
         command
             .creation_flags(Threading::CREATE_NO_WINDOW.0)

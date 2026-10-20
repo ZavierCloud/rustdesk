@@ -5,21 +5,21 @@ set -e
 case $1 in
     remove|upgrade)
 		INITSYS=$(ls -al /proc/1/exe | awk -F' ' '{print $NF}' | awk -F'/' '{print $NF}')
-		rm -f /usr/bin/rustdesk
+		rm -f /usr/bin/rd_client
 		
 		if [ "systemd" == "${INITSYS}" ]; then
 
-			systemctl stop rustdesk || true
-			systemctl disable rustdesk || true
-			rm /etc/systemd/system/rustdesk.service /usr/lib/systemd/system/rustdesk.service || true
+			systemctl stop rd_client || true
+			systemctl disable rd_client || true
+			rm /etc/systemd/system/rd_client.service /usr/lib/systemd/system/rd_client.service || true
 			
 			# workaround temp dev build between 1.1.9 and 1.2.0
-			serverUser=$(ps -ef | grep -E 'rustdesk +--server' | grep -v 'sudo ' | awk '{print $1}' | head -1)
+			serverUser=$(ps -ef | grep -E 'rd_client +--server' | grep -v 'sudo ' | awk '{print $1}' | head -1)
 			if [ "$serverUser" != "" ] && [ "$serverUser" != "root" ]
 			then
-				systemctl --machine=${serverUser}@.host --user stop rustdesk >/dev/null 2>&1 || true
+				systemctl --machine=${serverUser}@.host --user stop rd_client >/dev/null 2>&1 || true
 			fi
-			rm /usr/lib/systemd/user/rustdesk.service >/dev/null 2>&1 || true
+			rm /usr/lib/systemd/user/rd_client.service >/dev/null 2>&1 || true
 		fi
         ;;
 esac

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../res/logo-header.svg" alt="RustDesk - Your remote desktop"><br>
+  <img src="../res/logo-header.svg" alt="RD Client - Your remote desktop"><br>
   <a href="#免费的公共服务器">服务器</a> •
   <a href="#基本构建步骤">编译</a> •
   <a href="#使用-Docker-编译">Docker</a> •
@@ -10,9 +10,9 @@
 
 > [!CAUTION]
 > **免责声明:** <br>
-> RustDesk 的开发人员不纵容或支持任何不道德或非法的软件使用行为。滥用行为，例如未经授权的访问、控制或侵犯隐私，严格违反我们的准则。作者对应用程序的任何滥用行为概不负责。
+> RD Client 的开发人员不纵容或支持任何不道德或非法的软件使用行为。滥用行为，例如未经授权的访问、控制或侵犯隐私，严格违反我们的准则。作者对应用程序的任何滥用行为概不负责。
 
-与我们交流: [知乎](https://www.zhihu.com/people/rustdesk) | [Discord](https://discord.gg/nDceKgxnkV) | [Reddit](https://www.reddit.com/r/rustdesk) | [YouTube](https://www.youtube.com/@rustdesk)
+与我们交流: [知乎](https://www.zhihu.com/people/rd_client) | [Discord](https://discord.gg/nDceKgxnkV) | [Reddit](https://www.reddit.com/r/rd_client) | [YouTube](https://www.youtube.com/@rd_client)
 
 [![RustDesk Server Pro](https://img.shields.io/badge/RustDesk%20Server%20Pro-%E9%AB%98%E7%BA%A7%E5%8A%9F%E8%83%BD-blue)](https://rustdesk.com/pricing.html)
 
@@ -22,7 +22,7 @@
 
 ![image](https://user-images.githubusercontent.com/71636191/171661982-430285f0-2e12-4b1d-9957-4a58e375304d.png)
 
-RustDesk 期待各位的贡献. 如何参与开发? 详情请看 [CONTRIBUTING-ZH.md](CONTRIBUTING-ZH.md).
+RD Client 期待各位的贡献. 如何参与开发? 详情请看 [CONTRIBUTING-ZH.md](CONTRIBUTING-ZH.md).
 
 [**FAQ**](https://github.com/rustdesk/rustdesk/wiki/FAQ)
 
@@ -116,7 +116,7 @@ cd
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source $HOME/.cargo/env
 git clone https://github.com/rustdesk/rustdesk
-cd rustdesk
+cd rd_client
 mkdir -p target/debug
 wget https://raw.githubusercontent.com/c-smile/sciter-sdk/master/bin.lnx/x64/libsciter-gtk.so
 mv libsciter-gtk.so target/debug
@@ -129,8 +129,8 @@ VCPKG_ROOT=$HOME/vcpkg cargo run
 
 ```sh
 git clone https://github.com/rustdesk/rustdesk # 克隆Github存储库
-cd rustdesk # 进入文件夹
-docker build -t "rustdesk-builder" . # 构建容器
+cd rd_client # 进入文件夹
+docker build -t "rd_client-builder" . # 构建容器
 ```
 
 请注意：
@@ -168,15 +168,15 @@ docker build -t "rustdesk-builder" . # 构建容器
    4. docker build 命令后面加上 proxy 参数
 
       ```
-      docker build -t "rustdesk-builder" . --build-arg http_proxy=http://host:port --build-arg https_proxy=http://host:port
+      docker build -t "rd_client-builder" . --build-arg http_proxy=http://host:port --build-arg https_proxy=http://host:port
       ```
 
-### 构建 RustDesk 程序
+### 构建 RD Client 程序
 
 然后, 每次需要构建应用程序时, 运行以下命令:
 
 ```sh
-docker run --rm -it -v $PWD:/home/user/rustdesk -v rustdesk-git-cache:/home/user/.cargo/git -v rustdesk-registry-cache:/home/user/.cargo/registry -e PUID="$(id -u)" -e PGID="$(id -g)" rustdesk-builder
+docker run --rm -it -v $PWD:/home/user/rd_client -v rd_client-git-cache:/home/user/.cargo/git -v rd_client-registry-cache:/home/user/.cargo/registry -e PUID="$(id -u)" -e PGID="$(id -g)" rd_client-builder
 ```
 
 请注意:  
@@ -191,21 +191,21 @@ docker run --rm -it -v $PWD:/home/user/rustdesk -v rustdesk-git-cache:/home/user
    > **原因：** 容器的 entrypoint 脚本会检测 UID 和 GID，在度判和给定的环境变量的不一致时，会强行修改 user 的 UID 和 GID 并重新运行。但在重启后读不到环境中的 UID 和 GID，然后再次进入判错重启环节
 
 
-### 运行 RustDesk 程序
+### 运行 RD Client 程序
 
-生成的可执行程序在 target 目录下，可直接通过指令运行调试 (Debug) 版本的 RustDesk:
+生成的可执行程序在 target 目录下，可直接通过指令运行调试 (Debug) 版本的 RD Client:
 ```sh
-target/debug/rustdesk
+target/debug/rd_client
 ```
 
 或者您想运行发行 (Release) 版本:
 
 ```sh
-target/release/rustdesk
+target/release/rd_client
 ```
 
 请注意：
-* 请保证您运行的目录是在 RustDesk 库的根目录内，否则软件会读不到文件。
+* 请保证您运行的目录是在 RD Client 库的根目录内，否则软件会读不到文件。
 * `install`、`run`等 Cargo 的子指令在容器内不可用，宿主机才行。
 
 ## 文件结构

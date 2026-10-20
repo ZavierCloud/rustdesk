@@ -133,7 +133,13 @@ fn find_package(name: &str) -> Vec<PathBuf> {
         vec![link_vcpkg(vcpkg_root.into(), name)]
     } else {
         // Try using homebrew
-        vec![link_homebrew_m1(name)]
+        let path = link_homebrew_m1(name);
+        if name == "aom" {
+            // Homebrew 的 aom 静态库引用了 libvmaf（视频质量评估），必须一并链接
+            println!("cargo:rustc-link-search=/opt/homebrew/lib");
+            println!("cargo:rustc-link-lib=dylib=vmaf");
+        }
+        vec![path]
     }
 }
 

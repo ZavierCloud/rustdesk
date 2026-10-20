@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../res/logo-header.svg" alt="RustDesk - desktopul tău la distanță"><br>
+  <img src="../res/logo-header.svg" alt="RD Client - desktopul tău la distanță"><br>
   <a href="../README.md#raw-steps-to-build">Construire</a> •
   <a href="../README.md#how-to-build-with-docker">Docker</a> •
   <a href="../README.md#file-structure">Structură</a> •
@@ -10,10 +10,10 @@
 
 > [!Atenție]
 > **Declinare de responsabilitate privind utilizarea abuzivă:** <br>
-> Dezvoltatorii RustDesk nu susțin sau aprobă utilizarea neetică sau ilegală a acestui software. Utilizarea abuzivă, cum ar fi accesul neautorizat, controlul sau invadarea intimității, este strict împotriva regulilor noastre. Autorii nu sunt responsabili pentru utilizarea necorespunzătoare a aplicației.
+> Dezvoltatorii RD Client nu susțin sau aprobă utilizarea neetică sau ilegală a acestui software. Utilizarea abuzivă, cum ar fi accesul neautorizat, controlul sau invadarea intimității, este strict împotriva regulilor noastre. Autorii nu sunt responsabili pentru utilizarea necorespunzătoare a aplicației.
 
 
-Conversați cu noi: [Discord](https://discord.gg/nDceKgxnkV) | [Twitter](https://twitter.com/rustdesk) | [Reddit](https://www.reddit.com/r/rustdesk) | [YouTube](https://www.youtube.com/@rustdesk)
+Conversați cu noi: [Discord](https://discord.gg/nDceKgxnkV) | [Twitter](https://twitter.com/rd_client) | [Reddit](https://www.reddit.com/r/rd_client) | [YouTube](https://www.youtube.com/@rd_client)
 
 [![RustDesk Server Pro](https://img.shields.io/badge/RustDesk%20Server%20Pro-Advanced%20Features-blue)](https://rustdesk.com/pricing.html)
 
@@ -21,7 +21,7 @@ Conversați cu noi: [Discord](https://discord.gg/nDceKgxnkV) | [Twitter](https:/
 
 ![imagine](https://user-images.githubusercontent.com/71636191/171661982-430285f0-2e12-4b1d-9957-4a58e375304d.png)
 
-RustDesk primește contribuții de la oricine. Vezi [CONTRIBUTING.md](../docs/CONTRIBUTING.md) pentru ajutor la început.
+RD Client primește contribuții de la oricine. Vezi [CONTRIBUTING.md](../docs/CONTRIBUTING.md) pentru ajutor la început.
 
 [**ÎNTREBĂRI FRECVENTE (FAQ)**](https://github.com/rustdesk/rustdesk/wiki/FAQ)
 
@@ -34,7 +34,7 @@ RustDesk primește contribuții de la oricine. Vezi [CONTRIBUTING.md](../docs/CO
     height="80">](https://f-droid.org/en/packages/com.carriez.flutter_hbb)
 [<img src="https://flathub.org/api/badge?svg&locale=en"
     alt="Get it on Flathub"
-    height="80">](https://flathub.org/apps/com.rustdesk.RustDesk)
+    height="80">](https://flathub.org/apps/com.rd_client.RD Client)
 
 ## Dependențe
 
@@ -118,7 +118,7 @@ cd
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source $HOME/.cargo/env
 git clone --recurse-submodules https://github.com/rustdesk/rustdesk
-cd rustdesk
+cd rd_client
 mkdir -p target/debug
 wget https://raw.githubusercontent.com/c-smile/sciter-sdk/master/bin.lnx/x64/libsciter-gtk.so
 mv libsciter-gtk.so target/debug
@@ -131,30 +131,30 @@ VCPKG_ROOT=$HOME/vcpkg cargo run
 
 ```sh
 git clone https://github.com/rustdesk/rustdesk
-cd rustdesk
+cd rd_client
 git submodule update --init --recursive
-docker build -t "rustdesk-builder" .
+docker build -t "rd_client-builder" .
 ```
 
 Apoi, de fiecare dată când trebuie să construiești aplicația, rulează comanda următoare:
 
 ```sh
-docker run --rm -it -v $PWD:/home/user/rustdesk -v rustdesk-git-cache:/home/user/.cargo/git -v rustdesk-registry-cache:/home/user/.cargo/registry -e PUID="$(id -u)" -e PGID="$(id -g)" rustdesk-builder
+docker run --rm -it -v $PWD:/home/user/rd_client -v rd_client-git-cache:/home/user/.cargo/git -v rd_client-registry-cache:/home/user/.cargo/registry -e PUID="$(id -u)" -e PGID="$(id -g)" rd_client-builder
 ```
 
 Reține că prima construire poate dura mai mult până când dependențele sunt în cache; construirile ulterioare vor fi mai rapide. De asemenea, dacă trebuie să specifici argumente diferite comenzii de build, le poți adăuga la finalul comenzii în poziția `<OPTIONAL-ARGS>`. De exemplu, pentru a construi o versiune optimizată de release, adaugă `--release`. Executabilul rezultat va fi disponibil în folderul `target` pe sistemul tău, și poate fi rulat cu:
 
 ```sh
-target/debug/rustdesk
+target/debug/rd_client
 ```
 
 Sau, dacă rulezi un executabil release:
 
 ```sh
-target/release/rustdesk
+target/release/rd_client
 ```
 
-Asigură-te că rulezi aceste comenzi din rădăcina repository-ului RustDesk, altfel aplicația poate să nu găsească resursele necesare. De asemenea, reține că alte subcomenzi cargo, cum ar fi `install` sau `run`, nu sunt acceptate în prezent prin această metodă, deoarece ar instala sau rula programul în interiorul containerului în loc de gazdă.
+Asigură-te că rulezi aceste comenzi din rădăcina repository-ului RD Client, altfel aplicația poate să nu găsească resursele necesare. De asemenea, reține că alte subcomenzi cargo, cum ar fi `install` sau `run`, nu sunt acceptate în prezent prin această metodă, deoarece ar instala sau rula programul în interiorul containerului în loc de gazdă.
 
 ## Structura fișierelor
 

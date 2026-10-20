@@ -1,10 +1,10 @@
-# Contribuții la RustDesk
+# Contribuții la RD Client
 
-RustDesk primește cu plăcere contribuții din partea tuturor. Iată ghidurile dacă te gândești să ne ajuți:
+RD Client primește cu plăcere contribuții din partea tuturor. Iată ghidurile dacă te gândești să ne ajuți:
 
 ## Contribuții
 
-Contribuțiile la RustDesk sau la dependențele sale ar trebui făcute sub forma de pull request-uri pe GitHub. Fiecare pull request va fi revizuit de un contributor principal (cineva cu permisiunea de a aplica patch-uri) și fie va fi integrat în arborele principal, fie vor fi oferite sugestii pentru modificările necesare. Toate contribuțiile trebuie să urmeze acest format, chiar și cele ale contributorilor principali.
+Contribuțiile la RD Client sau la dependențele sale ar trebui făcute sub forma de pull request-uri pe GitHub. Fiecare pull request va fi revizuit de un contributor principal (cineva cu permisiunea de a aplica patch-uri) și fie va fi integrat în arborele principal, fie vor fi oferite sugestii pentru modificările necesare. Toate contribuțiile trebuie să urmeze acest format, chiar și cele ale contributorilor principali.
 
 Dacă dorești să lucrezi la o problemă, te rugăm să o revendici mai întâi comentând pe GitHub issue-ul pe care vrei să lucrezi. Aceasta previne eforturi duplicate din partea contributorilor asupra aceleiași probleme.
 
@@ -28,4 +28,4 @@ Pentru instrucțiuni specifice git, vezi [GitHub workflow 101](https://github.co
 
 ## Comunicare
 
-Contributorii RustDesk frecventează [Discord](https://discord.gg/nDceKgxnkV).
+Contributorii RD Client frecventează [Discord](https://discord.gg/nDceKgxnkV).

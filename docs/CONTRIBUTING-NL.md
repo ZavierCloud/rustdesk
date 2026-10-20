@@ -1,11 +1,11 @@
-# Bijdragen aan RustDesk
+# Bijdragen aan RD Client
 
-RustDesk verwelkomt bijdragen van iedereen. Hier zijn de richtlijnen als u denkt 
+RD Client verwelkomt bijdragen van iedereen. Hier zijn de richtlijnen als u denkt 
 ons te willen helpen:
 
 ## Bijdragen
 
-Bijdragen aan RustDesk of haar afhankelijkheden moeten worden gedaan in de 
+Bijdragen aan RD Client of haar afhankelijkheden moeten worden gedaan in de 
 vorm van GitHub pull verzoeken. Elk pull verzoek zal worden beoordeeld door 
 een core bijdrager (iemand met toestemming om patches te plaatsen) en ofwel 
 worden geplaatst in de hoofd structuur of feedback krijgen voor veranderingen 
@@ -47,4 +47,4 @@ https://github.com/rustdesk/rustdesk/blob/master/docs/CODE_OF_CONDUCT.md
 
 ## Communicatie
 
-RustDesk medewerkers bezoeken frequent [Discord](https://discord.gg/nDceKgxnkV).
+RD Client medewerkers bezoeken frequent [Discord](https://discord.gg/nDceKgxnkV).
