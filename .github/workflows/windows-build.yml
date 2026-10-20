@@ -62,7 +62,7 @@ jobs:
           path: |
             C:\vcpkg\installed
             C:\vcpkg\packages
-          key: vcpkg-${{ env.VCPKG_TRIPLET }}-deps-v1
+          key: vcpkg-${{ env.VCPKG_TRIPLET }}-deps-v2
 
       - name: Setup vcpkg + deps
         if: steps.vcpkg-cache.outputs.cache-hit != 'true'
@@ -79,6 +79,19 @@ jobs:
             libyuv:${{ env.VCPKG_TRIPLET }} `
             opus:${{ env.VCPKG_TRIPLET }} `
             aom:${{ env.VCPKG_TRIPLET }}
+          C:\vcpkg\vcpkg.exe integrate install
+          $vcpkgRoot = "C:\vcpkg\installed\${{ env.VCPKG_TRIPLET }}"
+          foreach ($name in @("libvpx", "libyuv", "opus", "aom")) {
+            if (-not (Test-Path "$vcpkgRoot\lib")) {
+              Write-Error "vcpkg 安装目录缺失: $vcpkgRoot\lib"
+            }
+          }
+          if (-not (Test-Path "$vcpkgRoot\lib\libvpx.a")) {
+            Write-Error "libvpx.a 未生成，检查 vcpkg install 日志"
+          }
+          if (-not (Test-Path "$vcpkgRoot\lib\libyuv.a")) {
+            Write-Error "libyuv.a 未生成，检查 vcpkg install 日志"
+          }
 
       - name: Set VCPKG_ROOT (cache hit)
         if: steps.vcpkg-cache.outputs.cache-hit == 'true'
@@ -86,6 +99,11 @@ jobs:
         run: |
           echo "VCPKG_ROOT=C:\vcpkg" >> $env:GITHUB_ENV
           C:\vcpkg\vcpkg.exe integrate install
+          $vcpkgRoot = "C:\vcpkg\installed\${{ env.VCPKG_TRIPLET }}"
+          if (-not (Test-Path "$vcpkgRoot\lib\libvpx.a") -or
+              -not (Test-Path "$vcpkgRoot\lib\libyuv.a")) {
+            Write-Error "缓存命中但依赖不完整，请把缓存 key 升版后重跑"
+          }
 
       # ---------- Flutter ----------
       - name: Setup Flutter
