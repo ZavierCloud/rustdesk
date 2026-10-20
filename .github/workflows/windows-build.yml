@@ -21,11 +21,13 @@ env:
   FLUTTER_VERSION: ${{ inputs.flutter_version }}
   RUST_TOOLCHAIN: ${{ inputs.rust_toolchain }}
   VCPKG_TRIPLET: x64-windows-static
+  # 与上游 CI 一致，vcpkg.json 的 baseline 依赖这个 commit
+  VCPKG_COMMIT_ID: 9e593bb18ea69cc5095e012465dcd675a822ed0d
 
 jobs:
   build:
     runs-on: windows-2022
-    timeout-minutes: 120
+    timeout-minutes: 180
 
     steps:
       - name: Checkout (with submodules)
@@ -54,44 +56,51 @@ jobs:
           key: win-x64-${{ env.RUST_TOOLCHAIN }}
           cache-targets: true
 
-      # ---------- vcpkg（首次 30-60 分钟，之后命中缓存） ----------
+      # ---------- vcpkg（manifest 模式，依赖来自仓库根的 vcpkg.json） ----------
       - name: Restore vcpkg cache
         id: vcpkg-cache
         uses: actions/cache@v4
         with:
           path: |
             C:\vcpkg\installed
+            C:\vcpkg\buildtrees
             C:\vcpkg\packages
-          key: vcpkg-${{ env.VCPKG_TRIPLET }}-deps-v2
+          key: vcpkg-${{ env.VCPKG_TRIPLET }}-manifest-v3
 
-      - name: Setup vcpkg + deps
+      - name: Clone and bootstrap vcpkg
         if: steps.vcpkg-cache.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
           if (-not (Test-Path "C:\vcpkg\vcpkg.exe")) {
-            git clone --depth 1 `
-              https://github.com/microsoft/vcpkg C:\vcpkg
-            C:\vcpkg\bootstrap-vcpkg.bat
+            git clone https://github.com/microsoft/vcpkg C:\vcpkg
+            Push-Location C:\vcpkg
+            git checkout ${{ env.VCPKG_COMMIT_ID }}
+            .\bootstrap-vcpkg.bat
+            Pop-Location
           }
           echo "VCPKG_ROOT=C:\vcpkg" >> $env:GITHUB_ENV
-          C:\vcpkg\vcpkg.exe install --classic `
-            libvpx:${{ env.VCPKG_TRIPLET }} `
-            libyuv:${{ env.VCPKG_TRIPLET }} `
-            opus:${{ env.VCPKG_TRIPLET }} `
-            aom:${{ env.VCPKG_TRIPLET }}
+
+      # vcpkg.json 在仓库根，必须用 manifest 模式（不能逐个指定包名）
+      - name: vcpkg install (manifest)
+        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        env:
+          VCPKG_DEFAULT_TRIPLET: ${{ env.VCPKG_TRIPLET }}
+          VCPKG_DEFAULT_HOST_TRIPLET: x64-windows
+        run: |
+          C:\vcpkg\vcpkg.exe install `
+            --triplet ${{ env.VCPKG_TRIPLET }} `
+            --x-install-root="C:\vcpkg\installed"
+          if ($LASTEXITCODE -ne 0) {
+            Get-ChildItem C:\vcpkg -Filter *.log -Recurse |
+              Select-Object -First 3 |
+              ForEach-Object {
+                Write-Host "=== $($_.FullName) ==="
+                Get-Content $_.FullName -Tail 60
+              }
+            Write-Error "vcpkg install 失败"
+          }
           C:\vcpkg\vcpkg.exe integrate install
-          $vcpkgRoot = "C:\vcpkg\installed\${{ env.VCPKG_TRIPLET }}"
-          foreach ($name in @("libvpx", "libyuv", "opus", "aom")) {
-            if (-not (Test-Path "$vcpkgRoot\lib")) {
-              Write-Error "vcpkg 安装目录缺失: $vcpkgRoot\lib"
-            }
-          }
-          if (-not (Test-Path "$vcpkgRoot\lib\libvpx.a")) {
-            Write-Error "libvpx.a 未生成，检查 vcpkg install 日志"
-          }
-          if (-not (Test-Path "$vcpkgRoot\lib\libyuv.a")) {
-            Write-Error "libyuv.a 未生成，检查 vcpkg install 日志"
-          }
 
       - name: Set VCPKG_ROOT (cache hit)
         if: steps.vcpkg-cache.outputs.cache-hit == 'true'
@@ -99,11 +108,18 @@ jobs:
         run: |
           echo "VCPKG_ROOT=C:\vcpkg" >> $env:GITHUB_ENV
           C:\vcpkg\vcpkg.exe integrate install
-          $vcpkgRoot = "C:\vcpkg\installed\${{ env.VCPKG_TRIPLET }}"
-          if (-not (Test-Path "$vcpkgRoot\lib\libvpx.a") -or
-              -not (Test-Path "$vcpkgRoot\lib\libyuv.a")) {
-            Write-Error "缓存命中但依赖不完整，请把缓存 key 升版后重跑"
+
+      # Windows 静态库是 .lib，不是 .a
+      - name: Verify vcpkg libs
+        shell: pwsh
+        run: |
+          $lib = "C:\vcpkg\installed\${{ env.VCPKG_TRIPLET }}\lib"
+          foreach ($n in @("libvpx", "libyuv", "opus", "aom", "libjpeg")) {
+            if (-not (Test-Path "$lib\$n.lib")) {
+              Write-Error "缺少 $lib\$n.lib，vcpkg 依赖不完整"
+            }
           }
+          Write-Host "vcpkg 依赖校验通过：$lib"
 
       # ---------- Flutter ----------
       - name: Setup Flutter
