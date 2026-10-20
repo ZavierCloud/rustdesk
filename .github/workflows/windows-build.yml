@@ -49,6 +49,8 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
+          # codegen 会用 rustfmt 格式化生成的 Rust 代码，缺了会 Fatal error
+          components: rustfmt
 
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
@@ -164,12 +166,26 @@ jobs:
       - name: Generate bridge
         shell: pwsh
         run: |
+          # 双保险：确保 rustfmt 可用（codegen 内部会调用它）
+          rustup component add rustfmt
+          rustfmt --version
+
           flutter_rust_bridge_codegen `
             --rust-input ./src/flutter_ffi.rs `
             --dart-output ./flutter/lib/generated_bridge.dart `
             --c-output ./flutter/macos/Runner/bridge_generated.h
-          Copy-Item flutter\macos\Runner\bridge_generated.h `
-            flutter\ios\Runner\bridge_generated.h -Force
+
+          $h = "flutter\macos\Runner\bridge_generated.h"
+          if (-not (Test-Path $h)) {
+            Write-Host "=== codegen 产物检查 ==="
+            $gen = Get-ChildItem src -Filter "bridge_generated*" `
+              -ErrorAction SilentlyContinue
+            $gen | Select-Object Name
+            Get-ChildItem flutter\lib -Filter "generated_bridge*" `
+              -ErrorAction SilentlyContinue | Select-Object Name
+            Write-Error "bridge_generated.h 未生成"
+          }
+          Copy-Item $h flutter\ios\Runner\bridge_generated.h -Force
           if (-not (Test-Path "src/bridge_generated.rs")) {
             Write-Error "bridge_generated.rs 生成失败"
           }
