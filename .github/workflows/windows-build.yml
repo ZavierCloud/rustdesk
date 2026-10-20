@@ -74,7 +74,7 @@ jobs:
             C:\vcpkg\bootstrap-vcpkg.bat
           }
           echo "VCPKG_ROOT=C:\vcpkg" >> $env:GITHUB_ENV
-          C:\vcpkg\vcpkg.exe install `
+          C:\vcpkg\vcpkg.exe install --classic `
             libvpx:${{ env.VCPKG_TRIPLET }} `
             libyuv:${{ env.VCPKG_TRIPLET }} `
             opus:${{ env.VCPKG_TRIPLET }} `
