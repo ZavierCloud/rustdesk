@@ -114,6 +114,7 @@ jobs:
       - name: Verify vcpkg libs
         shell: pwsh
         run: |
+          Write-Host "workflow-rev: 2026-10-20-v6 (vpx.lib/yuv.lib)"
           $lib = "C:\vcpkg\installed\${{ env.VCPKG_TRIPLET }}\lib"
           if (-not (Test-Path $lib)) {
             Write-Host "=== installed 目录 ==="
