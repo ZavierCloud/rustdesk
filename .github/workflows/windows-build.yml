@@ -1,0 +1,189 @@
+name: Build Windows (unsigned)
+
+# 手动触发：Actions → Build Windows (unsigned) → Run workflow
+# 产物：rd_client-windows-x64-unsigned（zip）
+#   含 RDClient.exe / librd_client.dll / service.exe / Flutter 依赖
+# 不签名、不出 MSI；签名见 WINDOWS-BUILD.md 第 8 节
+
+on:
+  workflow_dispatch:
+    inputs:
+      flutter_version:
+        description: "Flutter version (repo 要求 3.24.5)"
+        default: "3.24.5"
+        required: false
+      rust_toolchain:
+        description: "Rust toolchain (stable 或 1.81)"
+        default: "1.81"
+        required: false
+
+env:
+  FLUTTER_VERSION: ${{ inputs.flutter_version }}
+  RUST_TOOLCHAIN: ${{ inputs.rust_toolchain }}
+  VCPKG_TRIPLET: x64-windows-static
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Verify submodule
+        shell: pwsh
+        run: |
+          git submodule status
+          if (-not (Test-Path "libs/hbb_common/src/config.rs")) {
+            Write-Error "libs/hbb_common 未初始化，检查 .gitmodules"
+          }
+
+      # ---------- Rust ----------
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: win-x64-${{ env.RUST_TOOLCHAIN }}
+          cache-targets: true
+
+      # ---------- vcpkg（首次 30-60 分钟，之后命中缓存） ----------
+      - name: Restore vcpkg cache
+        id: vcpkg-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            C:\vcpkg\installed
+            C:\vcpkg\packages
+          key: vcpkg-${{ env.VCPKG_TRIPLET }}-deps-v1
+
+      - name: Setup vcpkg + deps
+        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "C:\vcpkg\vcpkg.exe")) {
+            git clone --depth 1 `
+              https://github.com/microsoft/vcpkg C:\vcpkg
+            C:\vcpkg\bootstrap-vcpkg.bat
+          }
+          echo "VCPKG_ROOT=C:\vcpkg" >> $env:GITHUB_ENV
+          C:\vcpkg\vcpkg.exe install `
+            libvpx:${{ env.VCPKG_TRIPLET }} `
+            libyuv:${{ env.VCPKG_TRIPLET }} `
+            opus:${{ env.VCPKG_TRIPLET }} `
+            aom:${{ env.VCPKG_TRIPLET }}
+
+      - name: Set VCPKG_ROOT (cache hit)
+        if: steps.vcpkg-cache.outputs.cache-hit == 'true'
+        shell: pwsh
+        run: |
+          echo "VCPKG_ROOT=C:\vcpkg" >> $env:GITHUB_ENV
+          C:\vcpkg\vcpkg.exe integrate install
+
+      # ---------- Flutter ----------
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Enable Windows desktop
+        shell: pwsh
+        run: flutter config --enable-windows-desktop
+
+      # ---------- bridge 代码生成（仓库无此文件） ----------
+      - name: Install codegen tools
+        shell: pwsh
+        run: |
+          cargo install cargo-expand --version 1.0.95 --locked
+          cargo install flutter_rust_bridge_codegen `
+            --version 1.80.1 --features uuid --locked
+
+      - name: flutter pub get
+        shell: pwsh
+        run: |
+          cd flutter
+          flutter pub get
+
+      - name: Generate bridge
+        shell: pwsh
+        run: |
+          flutter_rust_bridge_codegen `
+            --rust-input ./src/flutter_ffi.rs `
+            --dart-output ./flutter/lib/generated_bridge.dart `
+            --c-output ./flutter/macos/Runner/bridge_generated.h
+          Copy-Item flutter\macos\Runner\bridge_generated.h `
+            flutter\ios\Runner\bridge_generated.h -Force
+          if (-not (Test-Path "src/bridge_generated.rs")) {
+            Write-Error "bridge_generated.rs 生成失败"
+          }
+
+      - name: build_runner
+        shell: pwsh
+        run: |
+          cd flutter
+          flutter pub run build_runner build `
+            --delete-conflicting-outputs
+
+      # ---------- 编译 ----------
+      - name: cargo build (flutter feature)
+        shell: pwsh
+        run: cargo build --locked --features flutter --release
+
+      - name: flutter build windows
+        shell: pwsh
+        run: |
+          cd flutter
+          flutter build windows --release
+
+      # ---------- 组装 ----------
+      - name: Assemble artifact
+        shell: pwsh
+        run: |
+          $rel = "flutter\build\windows\x64\runner\Release"
+          if (-not (Test-Path $rel)) {
+            Write-Error "未找到 Flutter 产物目录: $rel"
+          }
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+
+          # Flutter runner 的 exe 名取自 CMake BINARY_NAME（rd_client.exe），
+          # 对外统一为 RDClient.exe（APP_NAME 与 {app_name}.exe 依赖此名）
+          Copy-Item "$rel\*" dist -Recurse -Force
+          if (Test-Path "dist\rd_client.exe") {
+            Move-Item dist\rd_client.exe dist\RDClient.exe -Force
+          }
+
+          Copy-Item target\release\service.exe dist `
+            -Force -ErrorAction SilentlyContinue
+          Copy-Item target\release\librd_client.dll dist `
+            -Force -ErrorAction SilentlyContinue
+
+          Get-ChildItem dist |
+            Select-Object Name, Length |
+            Format-Table -AutoSize
+
+          # 静态特征自检（白名单：驱动名与 rustdesk.com 文档链接）
+          $hit = Select-String -Path dist\*.exe, dist\*.dll `
+            -Pattern "rustdesk" -SimpleMatch -List
+          if ($hit) {
+            Write-Warning "含 rustdesk 字样，需人工确认为白名单:"
+            $hit | ForEach-Object { Write-Warning $_.Path }
+          } else {
+            Write-Host "strings 自检：未发现 rustdesk"
+          }
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rd_client-windows-x64-unsigned
+          path: dist
+          if-no-files-found: error
+          retention-days: 14
