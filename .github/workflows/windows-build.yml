@@ -109,14 +109,27 @@ jobs:
           echo "VCPKG_ROOT=C:\vcpkg" >> $env:GITHUB_ENV
           C:\vcpkg\vcpkg.exe integrate install
 
-      # Windows 静态库是 .lib，不是 .a
+      # Windows 静态库后缀是 .lib，且库名是 CMake target 名：
+      # libvpx -> vpx.lib, libyuv -> yuv.lib, libjpeg-turbo -> jpeg.lib
       - name: Verify vcpkg libs
         shell: pwsh
         run: |
           $lib = "C:\vcpkg\installed\${{ env.VCPKG_TRIPLET }}\lib"
-          foreach ($n in @("libvpx", "libyuv", "opus", "aom", "libjpeg")) {
-            if (-not (Test-Path "$lib\$n.lib")) {
-              Write-Error "缺少 $lib\$n.lib，vcpkg 依赖不完整"
+          if (-not (Test-Path $lib)) {
+            Write-Host "=== installed 目录 ==="
+            $dirs = Get-ChildItem C:\vcpkg\installed -Directory `
+              -ErrorAction SilentlyContinue
+            $dirs | Select-Object -ExpandProperty Name
+            Write-Error "库目录不存在: $lib"
+          }
+          $files = Get-ChildItem $lib -Filter *.lib `
+            -ErrorAction SilentlyContinue |
+            Select-Object -ExpandProperty Name
+          $joined = $files -join ', '
+          Write-Host "已安装库 ($($files.Count) 个): $joined"
+          foreach ($n in @("vpx.lib", "yuv.lib", "opus.lib", "aom.lib")) {
+            if ($files -notcontains $n) {
+              Write-Error "缺少 $n（vcpkg 依赖不完整）"
             }
           }
           Write-Host "vcpkg 依赖校验通过：$lib"
