@@ -144,8 +144,8 @@ jobs:
       - name: Verify vcpkg libs
         shell: pwsh
         run: |
-          Write-Host "workflow-rev: 2026-10-21-v9"
-          Write-Host "v9: path remap, RD Client 日志前缀"
+          Write-Host "workflow-rev: 2026-10-21-v10"
+          Write-Host "v10: lang/Dart 端口文案 +10（工作流本体未变）"
           $lib = "C:\vcpkg\installed\${{ env.VCPKG_TRIPLET }}\lib"
           if (-not (Test-Path $lib)) {
             Write-Host "=== installed 目录 ==="

@@ -710,7 +710,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Allow insecure TLS fallback", "Salli turvaton TLS-varajärjestely"),
         ("allow-insecure-tls-fallback-tip", "Oletuksena RD Client vahvistaa palvelimen varmenteen TLS:ää käyttävissä protokollissa.\nKun tämä asetus on käytössä, RD Client ohittaa vahvistusvaiheen ja jatkaa toimintaa, jos vahvistus epäonnistuu."),
         ("Disable UDP", "Poista UDP käytöstä"),
-        ("disable-udp-tip", "Määrittää, käytetäänkö vain TCP:tä.\nKun tämä asetus on käytössä, RD Client ei enää käytä UDP-porttia 21116, vaan sen sijaan käytetään TCP-porttia 21116."),
+        ("disable-udp-tip", "Määrittää, käytetäänkö vain TCP:tä.\nKun tämä asetus on käytössä, RD Client ei enää käytä UDP-porttia 21126, vaan sen sijaan käytetään TCP-porttia 21126."),
         ("server-oss-not-support-tip", "HUOMAUTUS: RD Client-palvelimen OSS ei sisällä tätä ominaisuutta."),
         ("input note here", "syötä muistiinpano tähän"),
         ("note-at-conn-end-tip", "Kysy muistiinpanoa yhteyden päättyessä"),
