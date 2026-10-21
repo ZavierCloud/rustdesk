@@ -144,8 +144,8 @@ jobs:
       - name: Verify vcpkg libs
         shell: pwsh
         run: |
-          Write-Host "workflow-rev: 2026-10-21-v8"
-          Write-Host "v8: lemenkov/libyuv, no git prompt, fast fail"
+          Write-Host "workflow-rev: 2026-10-21-v9"
+          Write-Host "v9: path remap, RD Client 日志前缀"
           $lib = "C:\vcpkg\installed\${{ env.VCPKG_TRIPLET }}\lib"
           if (-not (Test-Path $lib)) {
             Write-Host "=== installed 目录 ==="
@@ -227,8 +227,14 @@ jobs:
             --delete-conflicting-outputs
 
       # ---------- 编译 ----------
+      # remap-path-prefix：把构建机绝对路径（含 D:\a\rustdesk\rustdesk 与
+      # runner 用户名）重写掉，否则 panic 位置会以明文写进 dll 字符串表。
       - name: cargo build (flutter feature)
         shell: pwsh
+        env:
+          RUSTFLAGS: >-
+            --remap-path-prefix=${{ github.workspace }}=src
+            --remap-path-prefix=C:\Users\runneradmin=~
         run: cargo build --locked --features flutter --release
 
       - name: flutter build windows
