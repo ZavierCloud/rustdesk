@@ -139,7 +139,7 @@ class PlatformFFI {
         : isLinux
             ? _openLinuxCoreLib()
             : isWindows
-                ? DynamicLibrary.open('librd_client.dll')
+                ? DynamicLibrary.open('rd_client.dll')
                 :
                 // Use executable itself as the dynamic library for MacOS.
                 // Multiple dylib instances will cause some global instances to be invalid.

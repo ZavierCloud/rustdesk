@@ -2,7 +2,7 @@ name: Build Windows (unsigned)
 
 # 手动触发：Actions → Build Windows (unsigned) → Run workflow
 # 产物：rd_client-windows-x64-unsigned（zip）
-#   含 RDClient.exe / librd_client.dll / service.exe / Flutter 依赖
+#   含 RDClient.exe / rd_client.dll / service.exe / Flutter 依赖
 # 不签名、不出 MSI；签名见 WINDOWS-BUILD.md 第 8 节
 
 on:
@@ -227,7 +227,7 @@ jobs:
 
           Copy-Item target\release\service.exe dist `
             -Force -ErrorAction SilentlyContinue
-          Copy-Item target\release\librd_client.dll dist `
+          Copy-Item target\release\rd_client.dll dist `
             -Force -ErrorAction SilentlyContinue
 
           Get-ChildItem dist |

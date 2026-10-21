@@ -23,10 +23,10 @@ const wchar_t* getWindowClassName();
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command)
 {
-  HINSTANCE hInstance = LoadLibraryA("librd_client.dll");
+  HINSTANCE hInstance = LoadLibraryA("rd_client.dll");
   if (!hInstance)
   {
-    std::cout << "Failed to load librd_client.dll." << std::endl;
+    std::cout << "Failed to load rd_client.dll." << std::endl;
     return EXIT_FAILURE;
   }
   FUNC_RD_CLIENT_CORE_MAIN rd_client_core_main =

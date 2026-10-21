@@ -1,6 +1,6 @@
 # Windows 构建环境（RD Client）
 
-目标：在 Windows 上产出 `RDClient.exe`、`librd_client.dll`、`rd_client-portable-packer.exe` 与 MSI 安装包。
+目标：在 Windows 上产出 `RDClient.exe`、`rd_client.dll`、`rd_client-portable-packer.exe` 与 MSI 安装包。
 
 ## 1. 必装工具
 
@@ -82,7 +82,7 @@ python build.py --flutter
 | 文件 | 路径 |
 | --- | --- |
 | 主程序 | `target\release\RDClient.exe` |
-| 核心库 | `target\release\librd_client.dll` |
+| 核心库 | `target\release\rd_client.dll` |
 | 便携版打包器 | `target\release\rd_client-portable-packer.exe` |
 | Flutter 构建目录 | `flutter\build\windows\x64\runner\Release\` |
 
@@ -113,8 +113,8 @@ strings64.exe target\release\RDClient.exe | Select-String -Pattern "rustdesk"
 | --- | --- | --- |
 | `Could not find package in ...libyuv` | vcpkg 未装或 triplet 不对 | 见第 2 节 |
 | `LINK : fatal error LNK1181: 无法打开输入文件 libvpx.lib` | 用了动态 triplet | 必须 `x64-windows-static` |
-| `flutter build windows` 找不到 `librd_client.dll` | CMake 未拷贝新命名的库 | 检查 `flutter\windows\CMakeLists.txt` 的 `RD_CLIENT_LIB` 路径 |
-| 启动报 `Failed to load librd_client.dll` | dll 与 exe 不同目录 | 把 dll 放 exe 同目录 |
+| `flutter build windows` 找不到 `rd_client.dll` | CMake 未拷贝新命名的库 | 检查 `flutter\windows\CMakeLists.txt` 的 `RD_CLIENT_LIB` 路径 |
+| 启动报 `Failed to load rd_client.dll` | dll 与 exe 不同目录 | 把 dll 放 exe 同目录 |
 | 安装后服务起不来 | 服务名/路径不一致 | 服务名应为 `RDClient`（`sc query RDClient`） |
 | 杀软/Defender 拦截 | 无代码签名 | 见第 8 节 |
 
@@ -122,7 +122,7 @@ strings64.exe target\release\RDClient.exe | Select-String -Pattern "rustdesk"
 
 - **OV/EV 代码签名证书**：DigiCert / Sectigo / GlobalSign，约 3000–6000 元/年；EV 需硬件 token 或云签名
 - **Azure Trusted Signing**：按月订阅，门槛低于 EV，适合个人/小团队
-- 签名对象：`RDClient.exe`、`librd_client.dll`、`rd_client-portable-packer.exe`、MSI
+- 签名对象：`RDClient.exe`、`rd_client.dll`、`rd_client-portable-packer.exe`、MSI
 - 命令示例：`signtool sign /fd SHA256 /tr <timestamp-url> /td SHA256 /a <file>`
 
 > 改名只消除静态特征。**没有签名，SmartScreen 与多数杀软仍会拦截**；远控类软件还会被行为检测命中，必要时需向厂商提交白名单。
