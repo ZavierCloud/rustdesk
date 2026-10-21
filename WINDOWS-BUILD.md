@@ -132,6 +132,8 @@ strings64.exe target\release\RDClient.exe | Select-String -Pattern "rustdesk"
 
 ## 9. 在新设备 clone 后接续（重要）
 
+> 当前进度快照：`docs/notes/SESSION-STATE.md`；改造全记录与坑清单：`docs/notes/RENAME-PLAN.md`；家用部署：`docs/notes/LOCAL-DEPLOY.md`。
+
 ```bash
 git clone git@github.com:ZavierCloud/rustdesk.git rd_client
 cd rd_client
