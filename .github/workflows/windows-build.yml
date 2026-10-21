@@ -59,18 +59,9 @@ jobs:
           cache-targets: true
 
       # ---------- vcpkg（manifest 模式，依赖来自仓库根的 vcpkg.json） ----------
-      - name: Restore vcpkg cache
-        id: vcpkg-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            C:\vcpkg\installed
-            C:\vcpkg\buildtrees
-            C:\vcpkg\packages
-          key: vcpkg-${{ env.VCPKG_TRIPLET }}-manifest-v3
-
+      # 顺序不能换：先 clone+bootstrap（保证 vcpkg.exe 一定存在），再恢复缓存。
+      # 之前按 cache-hit 跳过 clone，缓存命中时 C:\vcpkg\vcpkg.exe 根本不存在。
       - name: Clone and bootstrap vcpkg
-        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
           if (-not (Test-Path "C:\vcpkg\vcpkg.exe")) {
@@ -82,33 +73,58 @@ jobs:
           }
           echo "VCPKG_ROOT=C:\vcpkg" >> $env:GITHUB_ENV
 
+      - name: Restore vcpkg cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            C:\vcpkg\installed
+            C:\vcpkg\downloads
+            C:\vcpkg\buildtrees
+            C:\vcpkg\packages
+          key: vcpkg-${{ env.VCPKG_TRIPLET }}-manifest-v4
+
+      # chromium.googlesource.com 在 GitHub runner 上 git fetch 常以 exit 128 中断
+      # （v6 就挂在 libyuv 的 git-fetch）。关 HTTP/2、放宽低速中断阈值。
+      # libyuv 已改走 GitHub 镜像；aom 没有含 3.14.1 的 GitHub 镜像，只能靠这层
+      # 加固 + 下面的 install 重试。
+      - name: Harden git for large fetches
+        shell: pwsh
+        run: |
+          git config --global http.version HTTP/1.1
+          git config --global http.postBuffer 524288000
+          git config --global http.lowSpeedLimit 0
+          git config --global http.lowSpeedTime 999999
+          git config --list --global | Select-String 'http\.'
+
       # vcpkg.json 在仓库根，必须用 manifest 模式（不能逐个指定包名）
+      # 缓存命中也要跑：install 对已装包幂等，还能补齐缓存缺的包。
       - name: vcpkg install (manifest)
-        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
         shell: pwsh
         env:
           VCPKG_DEFAULT_TRIPLET: ${{ env.VCPKG_TRIPLET }}
           VCPKG_DEFAULT_HOST_TRIPLET: x64-windows
         run: |
-          C:\vcpkg\vcpkg.exe install `
-            --triplet ${{ env.VCPKG_TRIPLET }} `
-            --x-install-root="C:\vcpkg\installed"
-          if ($LASTEXITCODE -ne 0) {
-            Get-ChildItem C:\vcpkg -Filter *.log -Recurse |
-              Select-Object -First 3 |
-              ForEach-Object {
-                Write-Host "=== $($_.FullName) ==="
-                Get-Content $_.FullName -Tail 60
-              }
-            Write-Error "vcpkg install 失败"
+          $ok = $false
+          for ($i = 1; $i -le 3; $i++) {
+            Write-Host "=== vcpkg install 第 $i 次尝试 ==="
+            C:\vcpkg\vcpkg.exe install `
+              --triplet ${{ env.VCPKG_TRIPLET }} `
+              --x-install-root="C:\vcpkg\installed"
+            if ($LASTEXITCODE -eq 0) { $ok = $true; break }
+            Write-Host "第 $i 次失败（exit=$LASTEXITCODE）"
+            if ($i -lt 3) { Start-Sleep -Seconds 20 }
           }
-          C:\vcpkg\vcpkg.exe integrate install
-
-      - name: Set VCPKG_ROOT (cache hit)
-        if: steps.vcpkg-cache.outputs.cache-hit == 'true'
-        shell: pwsh
-        run: |
-          echo "VCPKG_ROOT=C:\vcpkg" >> $env:GITHUB_ENV
+          if (-not $ok) {
+            Write-Host "=== 失败日志（*err.log 优先）==="
+            Get-ChildItem C:\vcpkg\buildtrees -Recurse -Filter *err.log `
+              -ErrorAction SilentlyContinue |
+              Select-Object -First 8 |
+              ForEach-Object {
+                Write-Host "--- $($_.FullName) ---"
+                Get-Content $_.FullName -Tail 40
+              }
+            Write-Error "vcpkg install 失败（已重试 3 次）"
+          }
           C:\vcpkg\vcpkg.exe integrate install
 
       # Windows 静态库后缀是 .lib，且库名是 CMake target 名：
@@ -116,7 +132,8 @@ jobs:
       - name: Verify vcpkg libs
         shell: pwsh
         run: |
-          Write-Host "workflow-rev: 2026-10-20-v6 (vpx.lib/yuv.lib)"
+          Write-Host "workflow-rev: 2026-10-21-v7"
+          Write-Host "v7: libyuv mirror, git hardening, install retry"
           $lib = "C:\vcpkg\installed\${{ env.VCPKG_TRIPLET }}\lib"
           if (-not (Test-Path $lib)) {
             Write-Host "=== installed 目录 ==="

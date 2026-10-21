@@ -2,7 +2,10 @@ vcpkg_check_linkage(ONLY_STATIC_LIBRARY)
 
 vcpkg_from_git(
     OUT_SOURCE_PATH SOURCE_PATH
-    URL https://chromium.googlesource.com/libyuv/libyuv
+    # 上游用 chromium.googlesource.com；GitHub Actions runner 上 git fetch 该域
+    # 频繁 exit 128 中断（见 windows-build.yml 注释）。libyuv 官方 GitHub 镜像
+    # 含同一 commit（git 对象 SHA 一致，内容相同），故改走镜像。
+    URL https://github.com/libyuv/libyuv
     REF 0faf8dd0e004520a61a603a4d2996d5ecc80dc3f
     # Check https://chromium.googlesource.com/libyuv/libyuv/+/refs/heads/main/include/libyuv/version.h for a version!
     PATCHES
