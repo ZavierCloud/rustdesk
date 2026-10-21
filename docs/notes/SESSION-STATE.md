@@ -12,7 +12,7 @@
 
 | 仓库 | 位置 | 当前提交 | 说明 |
 | --- | --- | --- | --- |
-| 客户端 | `rustdesk/` | `2a67640d2` | 已 push 到 `ZavierCloud/rustdesk` master |
+| 客户端 | `rustdesk/` | `7eb4525da` | 已 push 到 `ZavierCloud/rustdesk` master |
 | 服务端 | `rustdesk-server/` | `9adf6c4` | 已 push 到 `ZavierCloud/rustdesk-server` master |
 | 共享库 | 两端 `libs/hbb_common` | `f2e726e` / `e376512` | fork `ZavierCloud/hbb_common` 的 `rd-client` / `rd-server` 分支 |
 
@@ -29,18 +29,20 @@
 - 产物内核对：`net.spidercloude.com` / `rd.spidercloude.com` 在、官方 `rs-ny.rustdesk.com` 不在、公钥在
 - v9 用 `--remap-path-prefix` 消除了 dll 里 12 条 `D:\a\rustdesk\rustdesk\…` 构建路径与 runner 用户名
 - 服务端 `cargo test` 全通过；客户端 `cargo check --lib` 通过
+- **v10 端口文案验收通过**（run #10，`7eb4525da`）：dll 里 `UDP/TCP 21126` 49 条、
+  示例 `192.168.16.1:21127` 6 条、旧端口文案 0 条；`app.so` 里 `21118` 从 1 → 0、
+  `21128` 从 15 → 16（Dart hintText 生效）
 
 ## 进行中
 
-**v10 端口文案验证**：`2a67640d2` 把 `src/lang/*.rs` 47 文件 179 处提示/示例里的官方端口 +10（`UDP 21116`→`21126`、示例 `...:21117`→`21127`），Dart 两处 `hintText 21118`→`21128`。**待跑 CI 确认产物不再出现旧端口文案**。
+Windows 侧验收已收尾，无进行中的 CI 修复。下一步是真机实测与签名。
 
 ## 待办
 
-1. v10 CI 重跑 + 新产物 `verify-strings.sh` 复验（期望白名单外 0，且旧端口文案消失）
-2. Windows 产物在真机跑起来实测（本机只能静态验收）
-3. 代码签名：Windows OV/EV 或 Azure Trusted Signing；macOS Developer ID + notarization
-4. 客户端 GUI 手工连 `net.spidercloude.com` 做端到端验证（另一台设备输入 `55333116`）
-5. 本地家用部署（`LOCAL-DEPLOY.md` 已写，暂不执行；需路由器 21124–21129 + 21126/udp 映射）
+1. Windows 产物在真机跑起来实测（本机只能静态验收：`RDClient.exe` 启动、托盘、服务）
+2. 代码签名：Windows OV/EV 或 Azure Trusted Signing；macOS Developer ID + notarization
+3. 客户端 GUI 手工连 `net.spidercloude.com` 做端到端验证（另一台设备输入 `55333116`）
+4. 本地家用部署（`LOCAL-DEPLOY.md` 已写，暂不执行；需路由器 21124–21129 + 21126/udp 映射）
 
 ## 关键文档
 
