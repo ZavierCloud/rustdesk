@@ -85,21 +85,27 @@ jobs:
 
       # chromium.googlesource.com 在 GitHub runner 上 git fetch 常以 exit 128 中断
       # （v6 就挂在 libyuv 的 git-fetch）。关 HTTP/2、放宽低速中断阈值。
-      # libyuv 已改走 GitHub 镜像；aom 没有含 3.14.1 的 GitHub 镜像，只能靠这层
-      # 加固 + 下面的 install 重试。
+      # libyuv 已改走 lemenkov/libyuv 镜像；aom 没有含 3.14.1 的 GitHub 镜像，
+      # 只能靠这层加固 + 下面的 install 重试。
       - name: Harden git for large fetches
         shell: pwsh
         run: |
           git config --global http.version HTTP/1.1
           git config --global http.postBuffer 524288000
-          git config --global http.lowSpeedLimit 0
-          git config --global http.lowSpeedTime 999999
+          # 低速 60 秒即中断，避免连接被黑洞时永久挂起
+          git config --global http.lowSpeedLimit 1000
+          git config --global http.lowSpeedTime 60
+          # 仓库 404/需认证时 git 会等凭据输入；无 TTY 就挂死，必须禁交互
+          git config --global credential.interactive false
+          echo "GIT_TERMINAL_PROMPT=0" >> $env:GITHUB_ENV
+          echo "GCM_INTERACTIVE=Never" >> $env:GITHUB_ENV
           git config --list --global | Select-String 'http\.'
 
       # vcpkg.json 在仓库根，必须用 manifest 模式（不能逐个指定包名）
       # 缓存命中也要跑：install 对已装包幂等，还能补齐缓存缺的包。
       - name: vcpkg install (manifest)
         shell: pwsh
+        timeout-minutes: 120
         env:
           VCPKG_DEFAULT_TRIPLET: ${{ env.VCPKG_TRIPLET }}
           VCPKG_DEFAULT_HOST_TRIPLET: x64-windows
@@ -138,8 +144,8 @@ jobs:
       - name: Verify vcpkg libs
         shell: pwsh
         run: |
-          Write-Host "workflow-rev: 2026-10-21-v7"
-          Write-Host "v7: libyuv mirror, git hardening, install retry"
+          Write-Host "workflow-rev: 2026-10-21-v8"
+          Write-Host "v8: lemenkov/libyuv, no git prompt, fast fail"
           $lib = "C:\vcpkg\installed\${{ env.VCPKG_TRIPLET }}\lib"
           if (-not (Test-Path $lib)) {
             Write-Host "=== installed 目录 ==="
