@@ -116,13 +116,19 @@ jobs:
           }
           if (-not $ok) {
             Write-Host "=== 失败日志（*err.log 优先）==="
-            Get-ChildItem C:\vcpkg\buildtrees -Recurse -Filter *err.log `
-              -ErrorAction SilentlyContinue |
-              Select-Object -First 8 |
-              ForEach-Object {
-                Write-Host "--- $($_.FullName) ---"
-                Get-Content $_.FullName -Tail 40
-              }
+            $sum = $env:GITHUB_STEP_SUMMARY
+            $logs = Get-ChildItem C:\vcpkg\buildtrees -Recurse `
+              -Filter *err.log -ErrorAction SilentlyContinue |
+              Select-Object -First 8
+            foreach ($l in $logs) {
+              Write-Host "--- $($l.FullName) ---"
+              Get-Content $l.FullName -Tail 40
+              # 同时写进 step summary，网页上不用下载就能看
+              Add-Content -Path $sum -Value "### $($l.Name)"
+              Add-Content -Path $sum -Value '```'
+              Get-Content $l.FullName -Tail 40 | Add-Content -Path $sum
+              Add-Content -Path $sum -Value '```'
+            }
             Write-Error "vcpkg install 失败（已重试 3 次）"
           }
           C:\vcpkg\vcpkg.exe integrate install
